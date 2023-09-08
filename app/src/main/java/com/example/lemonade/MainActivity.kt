@@ -68,7 +68,7 @@ fun LemonadeApp() {
     var step by remember { mutableStateOf(1) }
 
     // Random value from 2 to 4 for 2nd step.
-    var squeezeCount = (2..4).random()
+    var squeezeCount by remember { mutableStateOf((2..4).random()) }
 
     Column {
         Box(
