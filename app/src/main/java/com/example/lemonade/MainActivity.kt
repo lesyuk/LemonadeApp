@@ -7,16 +7,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -56,102 +54,104 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun LemonadeApp() {
+    // Should be used within Composable function. Required for a toast.
+    val context = LocalContext.current
+
+    /* Current step the app is displaying.
+
+    When the step variable gets updated to a new value, Compose triggers recomposition of the
+    LemonadeApp composable, which means that the composable will execute again. The step value
+    is remembered across recompositions. */
+    var step by remember { mutableStateOf(1) }
+
+    // Random value from 2 to 4 for 2nd step.
+    var squeezeCount = (2..4).random()
+
     Column {
         Box(
             modifier = Modifier
                 .background(Color.Yellow)
                 .fillMaxWidth(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 modifier = Modifier.padding(16.dp),
                 text = "Lemonade",
                 fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
-        LemonadeImageAndLabel(
-            modifier = Modifier
-                .fillMaxSize()
-                .wrapContentSize(Alignment.Center)
-                .weight(0.8f)
-        )
-        Spacer(modifier = Modifier.weight(0.2f))
+        when (step) {
+            1 -> LemonadeImageAndLabel(
+                R.drawable.lemon_tree,
+                R.string.lemon_tree_desc,
+                R.string.lemon_tree,
+                { step++ },
+            )
+
+            2 -> LemonadeImageAndLabel(
+                R.drawable.lemon_squeeze,
+                R.string.lemon_squeeze_desc,
+                R.string.lemon_squeeze,
+                {
+                    if (squeezeCount != 1) showToast(context, "${--squeezeCount} clicks left")
+                    else step++
+                },
+            )
+
+            3 -> LemonadeImageAndLabel(
+                R.drawable.lemon_drink,
+                R.string.lemon_drink_desc,
+                R.string.lemon_drink,
+                { step++ },
+            )
+
+            4 -> LemonadeImageAndLabel(
+                R.drawable.lemon_restart,
+                R.string.lemon_restart_desc,
+                R.string.lemon_restart,
+                {
+                    step = 1
+                    squeezeCount = (2..4).random()
+                },
+            )
+        }
     }
 
 }
 
 @Composable
 fun LemonadeImageAndLabel(
-    modifier: Modifier = Modifier
+    imageResource: Int,
+    accessibilityResource: Int,
+    labelResource: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    // Should be used within Composable function. Required for a toast.
-    val context = LocalContext.current
-
-    /* Current step the app is displaying
-
-    When the step variable gets updated to a new value, Compose triggers recomposition of the
-    LemonadeImageAndLabel composable, which means that the composable will execute again. The step value
-    is remembered across recompositions. */
-    var step by remember {
-        mutableStateOf(1)
-    }
-
-    var squeezeCount = (2..4).random()
-
-    var imageResource = when (step) {
-        1 -> R.drawable.lemon_tree
-        2 -> R.drawable.lemon_squeeze
-        3 -> R.drawable.lemon_drink
-        else -> R.drawable.lemon_restart
-    }
-
-    var accessibilityResource = when (step) {
-        1 -> R.string.lemon_tree_desc
-        2 -> R.string.lemon_squeeze_desc
-        3 -> R.string.lemon_drink_desc
-        else -> R.string.lemon_restart_desc
-    }
-
-    var labelResource = when (step) {
-        1 -> R.string.lemon_tree
-        2 -> R.string.lemon_squeeze
-        3 -> R.string.lemon_drink
-        else -> R.string.lemon_restart
-    }
-
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize(),
+    ) {
         Image(
             painter = painterResource(id = imageResource),
             contentDescription = stringResource(id = accessibilityResource),
             modifier = Modifier
                 .clip(RoundedCornerShape(28.dp))
                 .clickable {
-                    when {
-                        step == 2 && squeezeCount != 1 -> {
-                            showToast(context, "${--squeezeCount} clicks left")
-                        }
-
-                        step != 4 -> step++
-                        else -> {
-                            step = 1
-                            squeezeCount = (2..4).random()
-                        }
-                    }
+                    onClick()
                 }
-                .size(200.dp)
-                .border(width = 2.dp, color = Color(0xFF69cdd8), shape = RoundedCornerShape(28.dp))
+                .size(250.dp)
                 .background(Color(0xFFC3ECD2))
-                .padding(24.dp)
+                .padding(24.dp),
         )
         Text(
             text = stringResource(id = labelResource),
             modifier = Modifier.padding(top = 16.dp),
-            fontSize = 18.sp
+            fontSize = 18.sp,
         )
     }
 }
